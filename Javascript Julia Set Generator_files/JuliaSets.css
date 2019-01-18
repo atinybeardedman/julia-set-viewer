@@ -1,0 +1,73 @@
+body {
+    width: 90%;
+    margin: auto;
+    background: #F0F0F0;
+    font-size: 100%;
+    font-family: sans-serif;
+}
+
+h1 {
+  border-bottom: 1px solid darkslategray;
+  padding: 10px;
+}
+
+.container {
+  width: 1600px;
+  outline-style: solid;
+  outline-width: medium;
+  margin: 20px;
+}
+
+.mandel-canvas {
+  width: 50%;
+  float: left;
+  height: 800px;
+  padding: 0 0 0 0;
+  margin: 0px;
+/* 
+  border-style: solid;
+  border-width: thin;
+ */
+}
+
+.julia-canvas {
+  width: 50%;
+  height: 800px;
+  margin: 0px;
+  padding: 0 0 0 0;
+  background-color: #ffffff;
+/* 
+  border-style: solid;
+  border-width: thin;
+ */
+}
+
+#control-panel {
+  width: 1600px;
+  height: 60px;
+  border-top: 1px solid darkslategray;
+  background: #C0C0D0;
+/* 
+  border-style: solid;
+  border-width: thin;
+ */
+}
+#controls {
+  width: 700px;
+  height: 60px;
+  margin-left: auto;
+  margin-right: auto;}
+#c-input {
+	width: 300px;
+	margin: 10px;
+}
+#radio-buttons {
+	float: right;
+}
+
+footer {
+	border-top: 1px solid darkslategray;
+    font-size: smaller;
+    margin-top: 5px;
+    clear: both;
+}
