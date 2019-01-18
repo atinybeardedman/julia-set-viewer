@@ -10,6 +10,7 @@
 	function main() {
 		"use strict";
 	var juliaBounds = [-2, 2, -2, 2];
+	var lastBounds = [juliaBounds.slice()];
 	var julia_set;
     var canvas_size = 800;
     var c_update_flag = true;
@@ -18,6 +19,12 @@
     var mandel_max_re = 0.5;
     var mandel_min_im = -1.3;
 	var mandel_max_im = 1.3;
+	var colorSelect = $('#colorScheme');
+	var colors = { 
+				"red/cyan": [[255, 0, 0], [255, 255, 0],[0,128,255], [0,255,255]],
+				"cool": [[0, 0, 255], [255,0, 255], [0,255,255]],
+				"grayscale":[[255, 255, 255],[0,0,0]]
+	};
 	var mandel_canvas = $(".mandel-canvas");
 	mandel_canvas.attr('width', canvas_size);
 	mandel_canvas.attr('height', canvas_size);
@@ -25,6 +32,11 @@
 		mandel_min_re, mandel_max_re,
 		mandel_min_im, mandel_max_im
 	);
+	colorSelect.on('change', function(){
+		if(julia_set){
+			julia_set.generate(juliaBounds, colors[colorSelect.val()]);
+		}
+	});
 	var julia_canvas = $(".julia-canvas");
 	var julia_context = julia_canvas[0].getContext("2d");
 	julia_canvas.attr('width', canvas_size);
@@ -46,11 +58,18 @@
 			c_main = c;
 	  		c_update_flag = false;
 			julia_set = new QuadraticJuliaSet(c, julia_canvas[0]);
-	  		var algorithm = $("input:radio[name=algorithm]:checked").val();
-			var julia_set = new QuadraticJuliaSet(c, julia_canvas[0]);
-			julia_set.generate(algorithm, juliaBounds);
+			julia_set.generate(juliaBounds, colors[colorSelect.val()]);
     	}
-    });
+	});
+	$("#undo-button").bind('click', function(event){
+		if(lastBounds.length === 1){
+			juliaBounds = lastBounds[0];
+		} else {
+			juliaBounds = lastBounds.pop();
+			julia_context.clearRect(0,0, julia_canvas[0].width, julia_canvas[0].height);
+			julia_set.generate(juliaBounds, colors[colorSelect.val()]);
+		}
+	});
 	$(".mandel-canvas").bind('click', function(event) {
 		var pos = get_mouse_position(event, mandel_canvas);
 		var c = canvas_to_complex(pos, 
@@ -64,9 +83,8 @@
 		c_main = c;
 		input.val(c.toString());
 	  	c_update_flag = false;
-		var algorithm = $("input:radio[name=algorithm]:checked").val();
 		julia_set = new QuadraticJuliaSet(c, julia_canvas[0]);
-		julia_set.generate(algorithm, juliaBounds);
+		julia_set.generate(juliaBounds, colors[colorSelect.val()]);
 	}).bind('mousemove', 
 	  function(event) {
 	  	if(c_update_flag == true) {
@@ -81,22 +99,23 @@
 	  });
 	  $(".julia-canvas").bind('dblclick', function(event) {
 		var pos = get_mouse_position(event, julia_canvas);
-		var algorithm = $("input:radio[name=algorithm]:checked").val();
 		var xy = canvas_to_xy(pos, juliaBounds[0], juliaBounds[1], juliaBounds[2], juliaBounds[3], julia_canvas[0]);
 		var oldBounds = juliaBounds.slice();
+		lastBounds.push(oldBounds);
 		var oldY = math.abs(oldBounds[3] - oldBounds[2]) / 2;
 		var oldX = math.abs(oldBounds[1] - oldBounds[0]) / 2;
 		juliaBounds[0] = xy[0] - oldX * .6;
 		juliaBounds[1] = xy[0] + oldX * .6;
-		juliaBounds[2] = xy[0] - oldY * .6;
-		juliaBounds[3] = xy[0] + oldY * .6;
+		juliaBounds[2] = xy[1] - oldY * .6;
+		juliaBounds[3] = xy[1] + oldY * .6;
 		julia_context.clearRect(0,0, julia_canvas[0].width, julia_canvas[0].height);
-		julia_set.generate(algorithm, juliaBounds);
+		julia_set.generate(juliaBounds, colors[colorSelect.val()]);
 
 	  });
 	  $("#clear-button").bind('click', function() {
 		julia_context.clearRect(0,0, julia_canvas[0].width, julia_canvas[0].height);
 		juliaBounds = [-2, 2, -2, 2];
+		lastBounds = [juliaBounds.slice()];
 		draw_mandelbrot_set(mandel_canvas[0], 
 			mandel_min_re, mandel_max_re,
 			mandel_min_im, mandel_max_im
@@ -106,12 +125,6 @@
 	  $("#download-button").bind('click', function() {
 	    window.location = julia_canvas[0].toDataURL('image/png');	  	
 	  });
-	  $("input:radio[name=algorithm]").click(function() {
-    	var value = $(this).val();
-	  });
-      var radios = $("input:radio[name=algorithm]")
-	  	.filter('[value=inverse_iteration]')
-	  	.prop('checked', true);
 };
 
 
@@ -194,47 +207,52 @@ function QuadraticJuliaSet(c, draw_canvas) {
 	this.draw_canvas = draw_canvas;
 }
 QuadraticJuliaSet.prototype = {
-	generate: function(algorithm, juliaBounds) {
+	generate: function(juliaBounds, colorScheme) {
 		"use strict";
-		if(algorithm == "inverse_iteration") {
-			draw_inverse_iterates(this.c, this.draw_canvas);
-		}
-		else if(algorithm = "escape_time") {
-			draw_julia_set(this.c, this.draw_canvas, juliaBounds)
-		}
+		
+			draw_julia_set(this.c, this.draw_canvas, juliaBounds, colorScheme)
+		
 	}
 }
 
 // Draw the Julia set using an escape time algorithm
-function draw_julia_set(c, canvas, bounds) {
+function draw_julia_set(c, canvas, bounds, colorScheme) {
 	"use strict";
 	var xmin = bounds[0], xmax = bounds[1];
 	var ymin = bounds[2], ymax = bounds[3];
-	var bail = 100;
+	var max_iterations = 100;
 	var context = canvas.getContext("2d");
 	var canvasData = context.createImageData(canvas.width, canvas.height);
-	var colors = [ [255, 0, 0],[0,255,255],[255, 0, 0],[0,128,255], [0, 0, 0]];
 	for(var i = 0; i < canvas.width; i++) {
 		for(var j = 0; j < canvas.height; j++) {
 			var idx1;
 			var idx2;
 			var fracBetween = 0; 
 			var xy = canvas_to_xy([i,j], xmin, xmax, ymin, ymax, canvas);
-			var it_cnt = julia_iteration_count(c.re,c.im,xy[0],xy[1]);
-			var color = it_cnt  / bail;
-			if(color <= 0) { idx1 = 0; idx2 = 0;}
-			else if(color >= 1) {idx1 = colors.length - 1; idx2 = colors.length - 1;}
-			else{
-				color = color * (colors.length - 1);
-				idx1 = Math.floor(color);
-				idx2 = idx1 + 1;
-				fracBetween = color - parseFloat(idx1);
-			}
+			var countObj = julia_iteration_count(c.re,c.im,xy[0],xy[1]); 
+			var it_cnt = countObj.count;
+			var isBounded = countObj.isBounded;
+			var color = it_cnt  / max_iterations;
 			var idx = (i+j*canvas.width) * 4;
-			canvasData.data[idx + 0] = (colors[idx2][0] - colors[idx1][0])*fracBetween + colors[idx1][0];
-			canvasData.data[idx + 1] = (colors[idx2][1] - colors[idx1][1])*fracBetween + colors[idx1][1];
-			canvasData.data[idx + 2] = (colors[idx2][2] - colors[idx1][2])*fracBetween + colors[idx1][2];
-			canvasData.data[idx + 3] = 255;
+			if(isBounded){
+				canvasData.data[idx + 0] = 0;
+				canvasData.data[idx + 1] = 0;
+				canvasData.data[idx + 2] = 0;
+				canvasData.data[idx + 3] = 255;
+			} else{
+				if(color <= 0) { idx1 = 0; idx2 = 0;}
+				else if(color >= 1) {idx1 = colorScheme.length - 1; idx2 = colorScheme.length - 1;}
+				else{
+					color = color * (colorScheme.length - 1);
+					idx1 = Math.floor(color);
+					idx2 = idx1 + 1;
+					fracBetween = color - parseFloat(idx1);
+				}
+				canvasData.data[idx + 0] = (colorScheme[idx2][0] - colorScheme[idx1][0])*fracBetween + colorScheme[idx1][0];
+				canvasData.data[idx + 1] = (colorScheme[idx2][1] - colorScheme[idx1][1])*fracBetween + colorScheme[idx1][1];
+				canvasData.data[idx + 2] = (colorScheme[idx2][2] - colorScheme[idx1][2])*fracBetween + colorScheme[idx1][2];
+				canvasData.data[idx + 3] = 255;
+			}
 		}
 	}
     context.putImageData(canvasData, 0, 0);
@@ -249,7 +267,7 @@ function julia_iteration_count(cre,cim,x0,y0) {
 		x = xtemp*xtemp-ytemp*ytemp+cre;
 		y = 2*xtemp*ytemp+cim
 	}
-	return cnt;
+	return {count: cnt, isBounded: x*x+y*y <= 4};
 }
 
 
