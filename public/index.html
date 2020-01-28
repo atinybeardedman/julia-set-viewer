@@ -1,33 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
 
-<!-- Code modified from https://www.marksmath.org/visualization/julia_sets/ -->
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<head>
+	<!-- Code modified from https://www.marksmath.org/visualization/julia_sets/ -->
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 	<title>Javascript Julia Set Explorer</title>
-	
- 	<link href="style.css" rel="stylesheet" type="text/css">
-<h1>
- Julia Set Generator
-</h1>
+
+	<link href="style.css" rel="stylesheet" type="text/css">
+	<script src="jquery-1.12.4.js"></script>
+	<script src="math.min.js"></script>
+	<script src="JuliaSetApp.js"></script>
+</head>
+
+<body>
+	<h1>
+		Julia Set Generator
+	</h1>
+	<p>Double click to zoom in</p>
 
 
-<div class="container">
-	<!-- <canvas class="mandel-canvas" width="500" height="500"></canvas> -->
-	<canvas class="julia-canvas" width="800" height="800"></canvas>
-	<div id="control-panel">
-		<div id="controls">
-			<input value="0" id="c-input" type="text">
-			<button id="update">Update</button>
-			<button id="reset-button">Reset</button>
-			<!-- <div id="radio-buttons">
-				Julia set algorithm: <br>
-				<input checked type="radio" name="algorithm" value="escape_time">
-					escape time
-			</div> -->
+	<div class="container">
+		<!-- <canvas class="mandel-canvas" width="500" height="500"></canvas> -->
+		<canvas class="julia-canvas" width="800" height="800"></canvas>
+		<div id="control-panel">
+			<div id="controls">
+				<input value="0" id="c-input" type="text">
+				<button id="update">Update</button>
+				<button id="reset-button">Reset</button>
+				<!-- <div id="radio-buttons">
+					Julia set algorithm: <br>
+					<input checked type="radio" name="algorithm" value="escape_time">
+						escape time
+				</div> -->
+			</div>
 		</div>
 	</div>
-</div>
-	<script src="./Javascript Julia Set Generator_files/jquery-1.12.4.js"></script>
-	<script src="./Javascript Julia Set Generator_files/math.min.js"></script>
-	<script src="./Javascript Julia Set Generator_files/JuliaSetApp.js"></script>
+
+</body>
 
 
-</body></html>
+</html>
